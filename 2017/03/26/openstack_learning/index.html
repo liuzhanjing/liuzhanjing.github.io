@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title> | liuzhanjing</title><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/5.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/0.6.2/grids-responsive-min.css"><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">liuzhanjing</h1><a id="logo" href="/.">liuzhanjing</a><p class="description">一期一会</p></div><div id="nav-menu"><a href="/." class="current"><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div id="layout" class="pure-g"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title"></h1><div class="post-meta">Mar 26, 2017<script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> Hits</span></span></div><a data-disqus-identifier="2017/03/26/openstack_learning/" href="/2017/03/26/openstack_learning/#disqus_thread" class="disqus-comment-count"></a><div class="post-content"><hr>
+<h2 id="title-openstack-learning"><a href="#title-openstack-learning" class="headerlink" title="title: openstack_learning"></a>title: openstack_learning</h2><p>troubleshoot</p>
+<hr>
+<p>keystone’s log:</p>
+<pre><code>keystone.log
+keystone_access.log
+</code></pre><p>saved in <strong>/var/log/apache2</strong> </p>
+<p>for more details :</p>
+<pre><code>vi /etc/keystone/keystone.conf
+debug = True
+</code></pre><p>if not the devstack environment,log maby in the <code>var/log/keystone/</code></p>
+<p>#image<br>Image 是一个模板，里面包含了基本的操作系统和其他的软件。方便快速部署。</p>
+<h2 id="image-service"><a href="#image-service" class="headerlink" title="image service"></a>image service</h2><p>image manager,for the user to view get and save image.</p>
+<p>Glance support the service:</p>
+<ul>
+<li>provide REST API for user to search and get image’metadata and itself;</li>
+<li>many ways to store image(normal filesystem.swift.amazon S3)</li>
+<li>snapshot the instance to create new image</li>
+<li><img src="http://7xo6kd.com1.z0.glb.clouddn.com/upload-ueditor-image-20160412-1460472066871043421.jpg" alt=""></li>
+</ul>
+<h3 id="glance-api"><a href="#glance-api" class="headerlink" title="glance-api"></a>glance-api</h3><p>系统服务进程，对外提供REAT API 响应image查询、获取和调用。<br>不会真正处理请求<br>如果是和<code>image metadata</code>相关的操作，glance-api就把请求转发给glance-registry；<br>如果是和image自身存取相关的操作，就转发给image的store backend</p>
+<p>在控制节点查看glance-api：</p>
+<blockquote>
+<p>ps -e|grep glance-api</p>
+</blockquote>
+<p>glance-api 系统服务进程。<br>负责处理和存取image的metadata。比如image的大小和类型。</p>
+<blockquote>
+<p>ps -e | grep glance-registry</p>
+</blockquote>
+<p>DB 默认是mysql,保存image的metadata：</p>
+<blockquote>
+<p>su stack<br>mysql<br>use glance<br>show tables</p>
+</blockquote>
+<p>glance自己不存储image，真正的image存放在backend里面。glance支持多种backend</p>
+<p>A directory on a local file system（这是默认配置）</p>
+<ol>
+<li><p>GridFS</p>
+</li>
+<li><p>Ceph RBD</p>
+</li>
+<li><p>Amazon S3</p>
+</li>
+<li><p>Sheepdog</p>
+</li>
+<li><p>OpenStack Block Storage (Cinder)</p>
+</li>
+<li><p>OpenStack Object Storage (Swift)</p>
+</li>
+<li><p>VMware ESX</p>
+</li>
+</ol>
+<p>具体使用哪一种由<code>/etc/glance/glance-api.conf</code>配置。<br>在我们的 devstack 环境中，image 存放在控制节点本地目录 <code>/opt/stack/data/glance/images/</code> 中。</p>
+<p>查看已存在的image：</p>
+<blockquote>
+<p>suorce devstack/openrc admin admin<br>glance image-list</p>
+</blockquote>
+<p>查看保存目录：</p>
+<blockquote>
+<p>ls -l /opt/stack/data/glance/images/</p>
+</blockquote>
+<p>每个image对应一个文件，文件以image的ID命名。</p>
+</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://liuzhanjing.github.io/2017/03/26/openstack_learning/" data-id="cj0qnh0a20002o88kbopj3wdp" class="article-share-link">分享到</a><div class="tags"></div><div class="post-nav"><a href="/2017/03/23/hello-world/" class="next">Hello World</a></div><div id="disqus_thread"><script>var disqus_shortname = 'https-liuzhanjing-github-io';
+var disqus_identifier = '2017/03/26/openstack_learning/';
+var disqus_title = '';
+var disqus_url = 'http://liuzhanjing.github.io/2017/03/26/openstack_learning/';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//https-liuzhanjing-github-io.disqus.com/count.js" async></script></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" class="search-form"><input type="text" name="q" maxlength="20" placeholder="Search"/><input type="hidden" name="sitesearch" value="http://liuzhanjing.github.io"/></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最新文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2017/03/26/openstack_learning/">openstack_learning</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/23/hello-world/">Hello World</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-comment-o"> 最近评论</i></div><script type="text/javascript" src="//https-liuzhanjing-github-io.disqus.com/recent_comments_widget.js?num_items=5&amp;hide_avatars=1&amp;avatar_size=32&amp;excerpt_length=20&amp;hide_mods=1"></script></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/liuzhanjing" title="GITHUB" target="_blank">GITHUB</a><ul></ul><a href="http://weibo.com/liuzhanjing" title="weibo" target="_blank">weibo</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">© <a href="/." rel="nofollow">liuzhanjing.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a id="rocket" href="#top" class="show"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="/css/jquery.fancybox.css?v=0.0.0"><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
